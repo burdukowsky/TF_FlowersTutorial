@@ -1,0 +1,62 @@
+# установка python3 на ubuntu
+sudo apt install python3
+sudo apt install python3-pip
+sudo apt install python3-setuptools
+
+# установка tensorflow
+pip3 install tensorflow
+python3 -c 'import tensorflow as tf; print(tf.__version__)'
+pip3 install tensorflow-hub
+
+# настройка IDEA
+# IDEA: File -> Project structure -> SDKs -> Python SDK (/usr/bin/python3)
+# IDEA: File -> Project structure -> Project -> Project SDK = Python SDK
+
+# скачивание и распаковка flower_photos.tgz
+curl -LO http://download.tensorflow.org/example_images/flower_photos.tgz
+tar xzf flower_photos.tgz
+
+# скачивание retrain.py
+curl -LO https://github.com/tensorflow/hub/raw/master/examples/image_retraining/retrain.py
+
+# тренировка (все артефакты будут в директории /tmp, которая очистится после перезагрузки компьютера)
+python3 retrain.py --image_dir flower_photos
+
+# копирование retrain_logs в проект
+cp -r /tmp/retrain_logs ~/Projects/TF_FlowersTutorial/
+
+# help по retrain.py
+python3 retrain.py -h
+
+# выжимка из help
+--image_dir IMAGE_DIR - Path to folders of labeled images.
+--output_graph OUTPUT_GRAPH - Where to save the trained graph.
+--output_labels OUTPUT_LABELS - Where to save the trained graph's labels.
+--summaries_dir SUMMARIES_DIR - Where to save summary logs for TensorBoard.
+--bottleneck_dir BOTTLENECK_DIR - Path to cache bottleneck layer values as files.
+--saved_model_dir SAVED_MODEL_DIR - Where to save the exported graph.
+
+# новая команда тренировки
+python3 retrain.py \
+--image_dir flower_photos \
+--output_graph output/output_graph.pb \
+--output_labels output/output_labels.txt \
+--bottleneck_dir output/bottleneck \
+--summaries_dir output/retrain_logs \
+--saved_model_dir output/saved_model
+
+# запуск tensorboard (будет доступно по адресу http://localhost:6006)
+python3 -m tensorboard.main --logdir output/retrain_logs
+
+# скачивание label_image.py
+curl -LO https://github.com/tensorflow/tensorflow/raw/master/tensorflow/examples/label_image/label_image.py
+
+# команда распознавания
+python3 label_image.py \
+--graph=output/output_graph.pb \
+--labels=output/output_labels.txt \
+--input_layer=Placeholder \
+--output_layer=final_result \
+--image=flower_photos/daisy/21652746_cc379e0eea_m.jpg
+
+# ссылка на гид: https://www.tensorflow.org/hub/tutorials/image_retraining
